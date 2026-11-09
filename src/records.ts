@@ -53,8 +53,9 @@ function fromJson(json: unknown, source: Entry['source']) {
 }
 
 function fromHtml(html: string) {
-  const dom = new DOMParser().parseFromString(html, 'text/html');
-  return [...dom.querySelectorAll('.outer-cell')].map(node => {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  return [...template.content.querySelectorAll('.outer-cell')].map(node => {
     const title = node.querySelector('.content-cell')?.textContent?.trim() ?? '';
     const dateText = title.match(/\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2} \d{1,2}, \d{4}|\d{4}년\s*\d{1,2}월\s*\d{1,2}일/)?.[0] ?? '';
     return { title: title.slice(0,120), date: normalize(dateText.replace(/(\d+)년\s*(\d+)월\s*(\d+)일/, '$1/$2/$3')), text: title };

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import type { FirebaseApp } from 'firebase/app';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { readRecords, readSummary, type Entry } from './records';
+import { downloadResults } from './excel';
 
 type Indicator = { code: string; name: string; max: number; score: number; needsAttention?: boolean };
 type Settings = { axes: Record<string,number>; indicators: Indicator[]; hrWeight: number; gradeBands: { grade: string; name: string; min: number }[];
@@ -301,20 +302,14 @@ export function Report({ app, path }: {app:FirebaseApp;path:string}) {
 export function Export({ app }: {app:FirebaseApp}) {
   const api = useOperations<Cycle[]>(app,'cycles');
   const audit = useOperations<{ action:string;target:string;at:string }[]>(app,'audit');
-  function csvValue(value: unknown) {
-    let text = String(value ?? '');
-    if (/^[\s]*[=+\-@]/.test(text)) text = "'" + text;
-    return '"' + text.replaceAll('"','""') + '"';
-  }
   return <section className="panel work"><Message {...api} />
     <form onSubmit={event => form(event,data => void api.run(async () => {
       const result = await api.call<{ rows:{ email:string;score:number;grade:string;hrScore:number|null }[] }>('export',{ cycleId:data.get('cycle') });
       const rows = [['계정','점수','등급','고과 반영'],...result.rows.map(item => [item.email,item.score,item.grade,item.hrScore])];
-      const url = URL.createObjectURL(new Blob(['\uFEFF' + rows.map(row => row.map(csvValue).join(',')).join('\r\n')],{ type:'text/csv;charset=utf-8' }));
-      const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'withax-results.csv'; anchor.click(); setTimeout(() => URL.revokeObjectURL(url),1000);
+      await downloadResults(rows);
     },false))}><label>공개 회차<select name="cycle" required><option value="">선택</option>
       {api.result?.filter(item => ['published','closed'].includes(item.status)).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-    </select></label><button disabled={api.busy}>결과 CSV 다운로드</button></form>
+    </select></label><button disabled={api.busy}>결과 Excel 다운로드</button></form>
     <h2>최근 감사 로그</h2><Message {...audit} />
     {audit.result && <table><thead><tr><th>시간</th><th>작업</th><th>대상</th></tr></thead>
       <tbody>{audit.result.map((row,index) => <tr key={index}><td>{row.at}</td><td>{row.action}</td><td>{row.target}</td></tr>)}</tbody></table>}
