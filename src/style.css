@@ -16,7 +16,7 @@ table{width:100%;border-collapse:collapse;text-align:left} th,td{padding:10px;bo
 .work form{display:grid;gap:12px;max-width:620px;margin-top:16px}
 .work form>label{display:grid;gap:5px;font-weight:600}
 .work form>label:has(input[type=checkbox]){display:block}
-.work input:not([type=checkbox]),.work textarea{border:1px solid #b9c5dc;border-radius:7px;padding:8px 10px;width:100%;background:#fff}
+.work input:not([type=checkbox]),.work textarea,.work select{border:1px solid #b9c5dc;border-radius:7px;padding:8px 10px;width:100%;background:#fff}
 .work fieldset{display:flex;flex-wrap:wrap;gap:8px 14px;border:1px solid #e0e6f1;border-radius:8px;padding:10px}
 .work button{width:fit-content}.work button:disabled{opacity:.55;cursor:default}
 .work a{color:#233caa;text-decoration:underline}

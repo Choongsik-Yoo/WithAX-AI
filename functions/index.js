@@ -4,11 +4,16 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { operate } from './operations.js';
+import { defineSecret } from 'firebase-functions/params';
+import { scoreEvaluation } from './scoring.js';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { purgeExpiredEvidence } from './retention.js';
 
 initializeApp();
 const region = 'asia-northeast3';
 const auth = getAuth();
 const validRoles = ['employee', 'evaluator', 'admin', 'approver'];
+const anthropicKey = defineSecret('ANTHROPIC_API_KEY');
 
 function rolesFor(entry) {
   if (entry?.active !== true || !Array.isArray(entry.roles)) return [];
@@ -58,3 +63,15 @@ export const operations = onCall({ region }, request => {
   }
   return operate(getFirestore(), user.uid, email.toLowerCase(), request.data);
 });
+
+export const score = onCall({ region, secrets: [anthropicKey], timeoutSeconds: 240 }, request => {
+  const user = request.auth;
+  const email = user?.token.email;
+  if (!email || user.token.email_verified !== true || user.token.firebase.sign_in_provider !== 'google.com') {
+    throw new HttpsError('permission-denied', '확인된 Google 계정으로 로그인하세요.');
+  }
+  return scoreEvaluation(getFirestore(), user.uid, email.toLowerCase(), request.data, anthropicKey.value());
+});
+
+export const expireEvidence = onSchedule({ region, schedule: '30 3 * * *', timeZone: 'Asia/Seoul', timeoutSeconds: 300 },
+  () => purgeExpiredEvidence(getFirestore()));

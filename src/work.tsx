@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import type { FirebaseApp } from 'firebase/app';
+import { statuses } from './assessment';
 
-type Cycle = { id: string; name: string; status: string; period: { from: string; to: string }; schedule: { close: string }; hrWeight: number };
+type Cycle = { id: string; name: string; status: string; period: { from: string; to: string }; schedule: { close: string }; hrWeight: number; pilot?: boolean };
 type Member = { id: string; name?: string; roles: string[]; active: boolean };
 type Case = { id: string; title: string; category: string; tools: string[]; process: string; qualityNote: string; before: { hours: number }; after: { hours: number } };
-type Home = { cycle: Cycle | null; agreed?: boolean; editable?: boolean; cases?: Case[]; tools?: string[]; limits?: { min: number; max: number } };
+type Home = { cycle: Cycle | null; agreed?: boolean; editable?: boolean; cases?: Case[]; tools?: string[]; limits?: { min: number; max: number }; status?: string };
 const labels = { employee: '직원', evaluator: '평가자', admin: '관리자', approver: '확정권자' };
 
 export function Work({ app, path }: { app: FirebaseApp; path: string }) {
@@ -76,20 +77,26 @@ export function Work({ app, path }: { app: FirebaseApp; path: string }) {
       </form>
     </>}
     {cyclesPage && Array.isArray(result) && <>
-      <h2>시범 평가 회차</h2>
-      <p>시범 회차의 인사고과 반영 비율은 0%입니다. 제출을 열면 회차의 평가 설정이 잠깁니다.</p>
+      <h2>평가 회차</h2>
+      <p>시범 회차의 인사고과 반영 비율은 0%입니다. 제출을 열면 배점과 루브릭 버전이 고정됩니다.</p>
       {(result as Cycle[]).length === 0 && <p>등록된 회차가 없습니다.</p>}
       {(result as Cycle[]).map(item => <div className="work-row" key={item.id}>
-        <span>{item.name} · {item.status === 'draft' ? '초안' : item.status === 'open' ? '제출 중' : '종료'} · 마감 {item.schedule.close}</span>
+        <span>{item.name} · {statuses[item.status] ?? item.status} · 마감 {item.schedule.close}</span>
         {item.status === 'draft' && <button disabled={busy} onClick={() => {
-          if (window.confirm('시범 회차를 열고 평가 설정을 잠글까요?')) void save('openCycle', { id: item.id });
+          if (window.confirm('회차를 열고 평가 설정을 잠글까요?')) void save('openCycle', { id: item.id });
         }}>제출 열기</button>}
-        {item.status === 'open' && <button disabled={busy} onClick={() => {
+        {item.status === 'draft' && <button className="secondary" disabled={busy} onClick={() => {
+          if (window.confirm('이 초안을 삭제할까요?')) void save('deleteDraft', { id: item.id });
+        }}>초안 삭제</button>}
+        {['open','scoring','reviewing','approving','published'].includes(item.status) && <button disabled={busy} onClick={() => {
+          if (window.confirm('회차를 다음 단계로 진행할까요?')) void save('advance', { cycleId:item.id, status:item.status });
+        }}>{{open:'AI 채점 단계',scoring:'평가자 검토 시작',reviewing:'최종 확정 단계',approving:'결과 공개',published:'회차 종료'}[item.status]}</button>}
+        {item.status === 'open' && item.pilot && <button disabled={busy} onClick={() => {
           if (window.confirm('시범 회차를 종료하고 추가 등록을 막을까요?')) void save('closeCycle', { id: item.id });
         }}>시범 종료</button>}
       </div>)}
       {path === '/admin/cycles' ? <form onSubmit={event => submit(event, form => {
-        const values = Object.fromEntries(form);
+        const values = { ...Object.fromEntries(form), pilot: form.has('pilot'), manual: form.has('manual') };
         void save('createCycle', values);
       })}>
         <h2>회차 만들기</h2>
@@ -97,25 +104,30 @@ export function Work({ app, path }: { app: FirebaseApp; path: string }) {
         <label>평가 대상 시작일<input name="from" type="date" required /></label>
         <label>평가 대상 종료일<input name="to" type="date" required /></label>
         <label>제출 마감일<input name="close" type="date" required /></label>
+        <label><input name="pilot" type="checkbox" defaultChecked /> 시범 회차 (고과 미반영)</label>
+        <label><input name="manual" type="checkbox" defaultChecked /> 사례 기반 수동 검토 (시범 회차에서만 적용)</label>
         <button disabled={busy}>초안 저장</button>
       </form> : <p><a href="/admin/cycles">회차 관리로 이동</a></p>}
     </>}
-    {home && !cycle && <p>열린 시범 평가 회차가 없습니다.</p>}
+    {home && !cycle && <p>열린 평가 회차가 없습니다.</p>}
     {cycle && <>
       <h2>{cycle.name}</h2>
       <p>대상 기간 {cycle.period.from} ~ {cycle.period.to} · 제출 마감 {cycle.schedule.close} (한국시간)</p>
       {path === '/' && <>
         <p>{home.agreed ? '평가 동의 완료' : '평가 동의 대기'} · 활용 사례 {home.cases?.length ?? 0}건</p>
+        {home.status && <p>진행 상태 {statuses[home.status] ?? home.status}</p>}
         <p><a href={home.agreed ? '/cases' : '/consent'}>{home.agreed ? '활용 사례 열기' : '평가 동의 확인'}</a></p>
+        {home.agreed && <p><a href="/import">대화 기록 가져오기 및 제출</a></p>}
       </>}
       {path === '/consent' && <>
-        <h2>시범 평가 정보 수집·이용 안내</h2>
-        <p>계정 식별 정보와 동의 기록, 직접 등록한 활용 사례를 시범 평가 기능 검증에 사용합니다. 인사고과 반영 비율은 0%입니다.</p>
-        <p>시범 평가 참여는 선택 사항입니다. 동의하지 않으면 이 회차의 활용 사례를 등록할 수 없습니다. 자료 보유 기간과 열람·삭제 요청은 참여 전에 관리자에게 확인하세요.</p>
+        <h2>평가 정보 수집·이용 안내</h2>
+        <p>계정 식별 정보와 동의 기록, 활용 사례, 평가 점수를 AI 활용 역량 평가에 사용합니다. AI는 1차안을 작성하고 평가자와 확정권자가 검토합니다. 이 회차의 인사고과 반영 비율은 {cycle.hrWeight}%입니다.</p>
+        <p>AI 채점 회차에서는 본인이 선택한 마스킹 발췌와 사례 요약을 Anthropic에 전송합니다. 원본 내보내기 파일은 브라우저 안에서만 처리합니다.</p>
+        <p>동의하지 않으면 이 회차에 자료를 등록할 수 없습니다. 공개된 결과는 결과 리포트에서 이의신청할 수 있습니다. 보유 기간과 열람·삭제 요청은 참여 전에 관리자에게 확인하세요.</p>
         {home.agreed ? <p>동의했습니다. <a href="/cases">활용 사례 등록</a></p> : <form onSubmit={event => submit(event, () => {
-          if (agree) void save('consent', { cycleId: cycle.id, textVersion: 'pilot-1' });
+          if (agree) void save('consent', { cycleId: cycle.id, textVersion: 'evaluation-2' });
         })}>
-          <label><input type="checkbox" checked={agree} onChange={event => setAgree(event.target.checked)} /> 시범 평가 자료 처리에 동의합니다.</label>
+          <label><input type="checkbox" checked={agree} onChange={event => setAgree(event.target.checked)} /> 평가 자료 처리에 동의합니다.</label>
           <button disabled={busy || !agree || !home.editable}>동의 저장</button>
         </form>}
       </>}

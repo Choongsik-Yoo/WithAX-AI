@@ -7,6 +7,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import defaults from '../seed/defaults.json';
 import './style.css';
 import { Work, workPaths } from './work';
+import { Configuration, Dashboard, Export, Records, Report, Review } from './assessment';
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -18,7 +19,7 @@ const app = Object.values(config).every(Boolean) ? initializeApp(config) : null;
 const auth = app && getAuth(app);
 const localPreview = !app && import.meta.env.DEV;
 const groups = {
-  employee: { title: '직원', pages: [['/', '내 평가'], ['/consent', '평가 동의'], ['/import', '기록 가져오기'], ['/import/review', '제출 전 검토'], ['/cases', '활용 사례'], ['/report/:cycleId', '결과 리포트'], ['/appeal/:cycleId', '이의신청']] },
+  employee: { title: '직원', pages: [['/', '내 평가'], ['/consent', '평가 동의'], ['/import', '기록 가져오기'], ['/import/review', '제출 전 검토'], ['/cases', '활용 사례'], ['/report', '결과 리포트'], ['/report/:cycleId', '결과 리포트'], ['/appeal/:cycleId', '이의신청']] },
   evaluator: { title: '평가자', pages: [['/review', '검토 대기'], ['/review/:evaluationId', '검토 상세']] },
   approver: { title: '확정권자', pages: [['/approve', '최종 확정']] },
   admin: { title: '관리자', pages: [['/admin', '운영 현황'], ['/admin/users', '사용자 관리'], ['/admin/cycles', '회차 관리'], ['/admin/settings', '평가 설정'], ['/admin/catalog', '도구·키워드'], ['/admin/rubrics', '루브릭'], ['/admin/export', '내보내기·감사 로그']] },
@@ -122,8 +123,14 @@ function App() {
         {settings ? <table><thead><tr><th>코드</th><th>평가 지표</th><th>배점</th></tr></thead><tbody>
           {settings.indicators.map(item => <tr key={item.code}><td>{item.code}</td><td>{item.name}</td><td>{item.max}</td></tr>)}
         </tbody></table> : <p>관리자가 평가 기준을 등록해야 합니다.</p>}
-      </section> : title && app && workPaths.includes(current) ? <Work key={current} app={app} path={current} /> : <section className="panel">{title ? <><span className="badge">준비 중</span>
-        <h2>{title}</h2><p>이 화면의 업무 기능은 후속 단계에서 연결됩니다.</p></> :
+      </section> : title && app && current === '/admin' ? <Dashboard app={app} />
+        : title && app && workPaths.includes(current) ? <Work key={current} app={app} path={current} />
+        : title && app && ['/admin/settings','/admin/catalog','/admin/rubrics'].includes(current) ? <Configuration key={current} app={app} path={current} />
+        : title && app && current === '/admin/export' ? <Export app={app} />
+        : title && app && (current.startsWith('/review') || current === '/approve') ? <Review key={current} app={app} path={current} />
+        : title && app && current.startsWith('/import') ? <Records key={current} app={app} path={current} />
+        : title && app && (current.startsWith('/report') || current.startsWith('/appeal')) ? <Report key={current} app={app} path={current} />
+        : <section className="panel">{title ? <p>업무 데이터를 사용하려면 Firebase 연결이 필요합니다.</p> :
         <a href={home} onClick={event => navigatePreview(event, home)}>내 역할의 시작 화면으로 이동</a>}</section>}
     </div></main>
   </div>;
