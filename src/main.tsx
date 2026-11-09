@@ -6,6 +6,7 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import defaults from '../seed/defaults.json';
 import './style.css';
+import { Work, workPaths } from './work';
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -116,12 +117,12 @@ function App() {
       if (auth) void signOut(auth);
       else setRoles([]);
     }}>{localPreview ? '역할 선택' : '로그아웃'}</button></span></header>
-    <div className="content"><p className="eyebrow">WITHUS AX · M1</p><h1>{title ?? '접근 권한이 없습니다'}</h1>
+    <div className="content"><p className="eyebrow">WITHUS AX</p><h1>{title ?? '접근 권한이 없습니다'}</h1>
       {current === '/criteria' ? <section className="panel"><h2>위더스 AX 역량평가 v2.0</h2>
         {settings ? <table><thead><tr><th>코드</th><th>평가 지표</th><th>배점</th></tr></thead><tbody>
           {settings.indicators.map(item => <tr key={item.code}><td>{item.code}</td><td>{item.name}</td><td>{item.max}</td></tr>)}
         </tbody></table> : <p>관리자가 평가 기준을 등록해야 합니다.</p>}
-      </section> : <section className="panel">{title ? <><span className="badge">M1 · 화면 연결</span>
+      </section> : title && app && workPaths.includes(current) ? <Work key={current} app={app} path={current} /> : <section className="panel">{title ? <><span className="badge">준비 중</span>
         <h2>{title}</h2><p>이 화면의 업무 기능은 후속 단계에서 연결됩니다.</p></> :
         <a href={home} onClick={event => navigatePreview(event, home)}>내 역할의 시작 화면으로 이동</a>}</section>}
     </div></main>

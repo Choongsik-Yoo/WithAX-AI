@@ -3,6 +3,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { operate } from './operations.js';
 
 initializeApp();
 const region = 'asia-northeast3';
@@ -47,4 +48,13 @@ export const updateRoles = onDocumentWritten({ region, document: 'allowlist/{ema
   const roles = rolesFor(current.data());
   await syncClaims(user.uid, roles);
   if (!roles.length) await auth.revokeRefreshTokens(user.uid);
+});
+
+export const operations = onCall({ region }, request => {
+  const user = request.auth;
+  const email = user?.token.email;
+  if (!email || user.token.email_verified !== true || user.token.firebase.sign_in_provider !== 'google.com') {
+    throw new HttpsError('permission-denied', '확인된 Google 계정으로 로그인하세요.');
+  }
+  return operate(getFirestore(), user.uid, email.toLowerCase(), request.data);
 });

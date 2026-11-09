@@ -13,3 +13,11 @@ nav a{display:block;padding:9px 12px;border-radius:7px;margin:3px 0}nav a:hover,
 header{display:flex;justify-content:space-between;align-items:center;gap:10px;background:white;border-bottom:1px solid #e0e6f1;padding:16px 28px}.content{max-width:1060px;margin:auto;padding:24px 28px}
 table{width:100%;border-collapse:collapse;text-align:left} th,td{padding:10px;border-bottom:1px solid #e0e6f1}
 @media(max-width:660px){.shell{display:block}aside{padding:12px}nav a{display:inline-block}nav h2{margin-top:8px}.content,header{padding:16px}.login-card{padding:24px}}
+.work form{display:grid;gap:12px;max-width:620px;margin-top:16px}
+.work form>label{display:grid;gap:5px;font-weight:600}
+.work form>label:has(input[type=checkbox]){display:block}
+.work input:not([type=checkbox]),.work textarea{border:1px solid #b9c5dc;border-radius:7px;padding:8px 10px;width:100%;background:#fff}
+.work fieldset{display:flex;flex-wrap:wrap;gap:8px 14px;border:1px solid #e0e6f1;border-radius:8px;padding:10px}
+.work button{width:fit-content}.work button:disabled{opacity:.55;cursor:default}
+.work a{color:#233caa;text-decoration:underline}
+.work-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #e0e6f1;padding:10px 0}
