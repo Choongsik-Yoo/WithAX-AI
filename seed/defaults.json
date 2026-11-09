@@ -1,0 +1,89 @@
+{
+  "axes": {
+    "A": 50,
+    "B": 35,
+    "C": 15
+  },
+  "indicators": [
+    {
+      "code": "A1",
+      "name": "맥락·구체성",
+      "max": 15
+    },
+    {
+      "code": "A2",
+      "name": "비판적 판단·검증",
+      "max": 15
+    },
+    {
+      "code": "A3",
+      "name": "도구·에이전트 활용",
+      "max": 10
+    },
+    {
+      "code": "A4",
+      "name": "복잡한 작업 설계",
+      "max": 10
+    },
+    {
+      "code": "B1",
+      "name": "업무 적용 성과",
+      "max": 20
+    },
+    {
+      "code": "B2",
+      "name": "자동화·재사용 자산",
+      "max": 15
+    },
+    {
+      "code": "C1",
+      "name": "지식 공유·전파",
+      "max": 10
+    },
+    {
+      "code": "C2",
+      "name": "보안·윤리 준수",
+      "max": 5
+    }
+  ],
+  "gradeBands": [
+    [
+      "S",
+      90,
+      "AX 리더"
+    ],
+    [
+      "A",
+      80,
+      "설계자"
+    ],
+    [
+      "B",
+      65,
+      "협업자"
+    ],
+    [
+      "C",
+      50,
+      "활용자"
+    ],
+    [
+      "D",
+      0,
+      "입문자"
+    ]
+  ],
+  "hrWeight": 10,
+  "securityGate": "B",
+  "reviewAdjustment": 10,
+  "ai": {
+    "runs": 3,
+    "model": "",
+    "spreadThreshold": 0.2
+  },
+  "retentionYears": 3,
+  "caseLimits": {
+    "min": 2,
+    "max": 3
+  }
+}

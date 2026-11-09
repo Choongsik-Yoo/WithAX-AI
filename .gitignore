@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env*
+!.env.example
+.firebase/
+firebase-debug.log
+SPEC.md
+

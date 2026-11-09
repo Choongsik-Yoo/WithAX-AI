@@ -1,0 +1,15 @@
+@import "tailwindcss";
+:root{font-family:"Segoe UI","Malgun Gothic",sans-serif;color:#18223a;background:#f4f6fb}
+body{margin:0} h1{font-size:2rem;font-weight:750;margin:.35rem 0 1rem} h2{font-size:1.15rem;font-weight:700;margin:.65rem 0} p{margin:.55rem 0;color:#475569}
+.login{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at top,#e0e9ff,#f4f6fb 70%)}
+.panel{background:white;border:1px solid #e0e6f1;border-radius:18px;padding:28px}.login-card{width:min(100%,490px);padding:40px;box-shadow:0 20px 60px #14275814}
+.mark{display:inline-grid;place-items:center;background:#3454dc;color:white;font-weight:800;border-radius:10px;width:38px;height:38px}
+.eyebrow{font-size:.73rem;font-weight:800;letter-spacing:.12em;color:#3454b5;margin-top:1rem} small{display:block;margin-top:20px;color:#475569}
+button{background:#3454cf;color:white;border-radius:8px;padding:.65rem 1rem;cursor:pointer;font-weight:650;margin-top:.6rem}.buttons{display:flex;flex-wrap:wrap;gap:7px}
+button.secondary{background:#e9eefc;color:#233caa;margin:0 0 0 .5rem}.shell{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+aside{background:#15203b;color:#e3ebff;padding:24px 16px}.brand{font-weight:800;display:flex;align-items:center;gap:8px} nav h2{font-size:.78rem;color:#c2cde5;margin-top:22px}
+nav a{display:block;padding:9px 12px;border-radius:7px;margin:3px 0}nav a:hover,nav a[aria-current]{background:#293b66;color:white}
+.badge{display:inline-block;background:#e9eefc;color:#263e9b;border-radius:100px;padding:4px 10px;font-size:.8rem;font-weight:700}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;background:white;border-bottom:1px solid #e0e6f1;padding:16px 28px}.content{max-width:1060px;margin:auto;padding:24px 28px}
+table{width:100%;border-collapse:collapse;text-align:left} th,td{padding:10px;border-bottom:1px solid #e0e6f1}
+@media(max-width:660px){.shell{display:block}aside{padding:12px}nav a{display:inline-block}nav h2{margin-top:8px}.content,header{padding:16px}.login-card{padding:24px}}

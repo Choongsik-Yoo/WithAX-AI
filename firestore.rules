@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.roles is list
+        && get(/databases/$(database)/documents/allowlist/$(request.auth.token.email.lower())).data.active == true
+        && get(/databases/$(database)/documents/allowlist/$(request.auth.token.email.lower())).data.roles == request.auth.token.roles;
+    }
+    match /settings/{id} { allow read: if allowed(); }
+    match /toolCatalog/{id} { allow read: if allowed(); }
+    match /keywordDictionary/{id} { allow read: if allowed(); }
+    match /criteriaHistory/{id} { allow read: if allowed(); }
+    match /{path=**} { allow read, write: if false; }
+  }
+}
