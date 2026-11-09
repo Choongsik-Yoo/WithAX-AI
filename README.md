@@ -12,11 +12,10 @@
 
 ## AI 채점 회차 설정
 
-회차를 열기 전에 평가 설정에서 구조화 출력을 지원하는 Anthropic 모델 ID를 저장하고 루브릭 버전을 등록합니다. Firebase Secret Manager에 키를 대화형으로 등록하고 채점 함수를 배포합니다.
+회차를 열기 전에 평가 설정에서 구조화 출력을 지원하는 Anthropic 모델 ID를 저장하고 루브릭 버전을 등록합니다. Secret Manager에 키를 대화형으로 등록하고, 채점 함수의 실행 서비스 계정에 해당 비밀에만 Secret Accessor 역할을 부여합니다.
 
 ```powershell
 npx.cmd firebase-tools functions:secrets:set ANTHROPIC_API_KEY --project withax-ai
-npx.cmd firebase-tools deploy --only functions:score --project withax-ai
 ```
 
 기록 파서는 원본 파일을 브라우저 메모리에서 처리합니다. 내보내기 파일 구조는 서비스별 실파일 샘플로 점검해야 합니다. AI 채점에는 선택된 마스킹 발췌가 전송되므로 사내 운영 전에 외부 제공처의 데이터 보유 설정과 동의 문안을 확인합니다.
