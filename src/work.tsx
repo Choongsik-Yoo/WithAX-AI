@@ -3,7 +3,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import type { FirebaseApp } from 'firebase/app';
 import { statuses } from './assessment';
 
-type Cycle = { id: string; name: string; status: string; period: { from: string; to: string }; schedule: { close: string }; hrWeight: number; pilot?: boolean };
+type Cycle = { id: string; name: string; status: string; period: { from: string; to: string }; schedule: { close: string }; hrWeight: number; pilot?: boolean; manual?: boolean };
 type Member = { id: string; name?: string; roles: string[]; active: boolean };
 type Case = { id: string; title: string; category: string; tools: string[]; process: string; qualityNote: string; before: { hours: number }; after: { hours: number } };
 type Home = { cycle: Cycle | null; agreed?: boolean; editable?: boolean; cases?: Case[]; tools?: string[]; limits?: { min: number; max: number }; status?: string };
@@ -81,7 +81,7 @@ export function Work({ app, path }: { app: FirebaseApp; path: string }) {
       <p>시범 회차의 인사고과 반영 비율은 0%입니다. 제출을 열면 배점과 루브릭 버전이 고정됩니다.</p>
       {(result as Cycle[]).length === 0 && <p>등록된 회차가 없습니다.</p>}
       {(result as Cycle[]).map(item => <div className="work-row" key={item.id}>
-        <span>{item.name} · {statuses[item.status] ?? item.status} · 마감 {item.schedule.close}</span>
+        <span>{item.name} · {statuses[item.status] ?? item.status} · {item.manual ? '수동 검토' : 'AI 채점'} · 마감 {item.schedule.close}</span>
         {item.status === 'draft' && <button disabled={busy} onClick={() => {
           if (window.confirm('회차를 열고 평가 설정을 잠글까요?')) void save('openCycle', { id: item.id });
         }}>제출 열기</button>}
@@ -94,6 +94,9 @@ export function Work({ app, path }: { app: FirebaseApp; path: string }) {
         {item.status === 'open' && item.pilot && <button disabled={busy} onClick={() => {
           if (window.confirm('시범 회차를 종료하고 추가 등록을 막을까요?')) void save('closeCycle', { id: item.id });
         }}>시범 종료</button>}
+        {item.status === 'open' && item.pilot && !item.manual && <button className="secondary" disabled={busy} onClick={() => {
+          if (window.confirm('기존 동의와 사례를 유지하고 이 시범 회차를 수동 검토로 전환할까요?')) void save('enableManualPilot',{ id:item.id });
+        }}>수동 검토로 전환</button>}
       </div>)}
       {path === '/admin/cycles' ? <form onSubmit={event => submit(event, form => {
         const values = { ...Object.fromEntries(form), pilot: form.has('pilot'), manual: form.has('manual') };

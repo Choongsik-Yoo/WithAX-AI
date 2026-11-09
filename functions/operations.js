@@ -17,7 +17,7 @@ const list = snapshot => snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }
 
 export async function operate(db, uid, email, input) {
   const { action, data = {} } = input ?? {};
-  const isAdmin = ['users', 'saveUser', 'cycles', 'createCycle', 'deleteDraft', 'openCycle', 'closeCycle', ...adminActions].includes(action);
+  const isAdmin = ['users', 'saveUser', 'cycles', 'createCycle', 'deleteDraft', 'openCycle', 'closeCycle', 'enableManualPilot', ...adminActions].includes(action);
   const access = { queue: ['evaluator', 'approver'], review: ['evaluator', 'approver'], approve: ['approver'], resolveAppeal: ['evaluator', 'approver'] };
   const allowed = isAdmin ? ['admin'] : Object.hasOwn(access, action) ? access[action] : ['employee'];
   const entry = db.collection('allowlist').doc(email);
@@ -64,6 +64,18 @@ export async function operate(db, uid, email, input) {
     }
     const active = db.doc('system/currentCycle');
     const current = (await tx.get(active)).data();
+    if (action === 'enableManualPilot') {
+      if (!current?.cycleId || current.cycleId !== data.id) fail('현재 제출 중인 회차를 확인하세요.');
+      const target = cycles.doc(current.cycleId);
+      const cycle = (await tx.get(target)).data();
+      if (cycle?.status !== 'open' || !cycle.pilot) fail('열린 시범 회차에서만 검토 방식을 변경할 수 있습니다.');
+      if (cycle.manual) return null;
+      const items = await tx.get(db.collection('evaluations').where('cycleId','==',target.id));
+      if (items.docs.some(item => item.data().submittedAt)) fail('제출된 평가가 있는 회차는 검토 방식을 변경할 수 없습니다.');
+      tx.update(target, { manual: true });
+      record(target.path, { before: { manual: false }, after: { manual: true } });
+      return null;
+    }
     if (action === 'deleteDraft') {
       const id = text(data.id, 100);
       if (!/^[\w-]+$/.test(id)) fail('회차 번호를 확인하세요.');
